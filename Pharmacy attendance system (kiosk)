@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pharmacy Attendance Kiosk</title>
+    <!-- Chart.js for offline charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
@@ -1170,10 +1172,6 @@
                         <span>⚙️</span>
                         <span>Manage</span>
                     </button>
-                    <button class="view-btn" id="manual-btn">
-                        <span>➕</span>
-                        <span>Add Record</span>
-                    </button>
                 </div>
 
                 <!-- Content Area -->
@@ -1244,80 +1242,6 @@
         </div>
     </div>
 
-    <!-- Manual Record Modal -->
-    <div class="modal" id="manual-record-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-icon">➕</div>
-                <h3>Add Manual Record</h3>
-            </div>
-            <div class="modal-body">
-                <div style="margin-bottom: 1.5rem;">
-                    <label class="input-label">Select Employee</label>
-                    <select id="manual-employee" style="width: 100%; padding: 1rem 1.25rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); font-size: 1rem;">
-                        <option value="">Choose employee...</option>
-                    </select>
-                </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label class="input-label">Date</label>
-                    <input type="date" id="manual-date" style="width: 100%; padding: 1rem 1.25rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); font-size: 1rem;">
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-                    <div>
-                        <label class="input-label">Check-In Time</label>
-                        <input type="time" id="manual-checkin" style="width: 100%; padding: 1rem 1.25rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); font-size: 1rem;">
-                    </div>
-                    <div>
-                        <label class="input-label">Check-Out Time</label>
-                        <input type="time" id="manual-checkout" style="width: 100%; padding: 1rem 1.25rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); font-size: 1rem;">
-                    </div>
-                </div>
-                <div>
-                    <label class="input-label">Note (Optional)</label>
-                    <textarea id="manual-note" placeholder="Add any notes about this session..." style="width: 100%; padding: 1rem 1.25rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); font-size: 1rem; min-height: 80px; font-family: inherit;"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancel-manual-btn">Cancel</button>
-                <button class="btn btn-success" id="save-manual-btn">
-                    <span>✓</span>
-                    <span>Save Record</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Exit Confirmation Modal -->
-    <div class="modal" id="exit-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-icon">🚪</div>
-                <h3>Close Pharmacy</h3>
-            </div>
-            <div class="modal-body">
-                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
-                    Are you sure you want to close the pharmacy?
-                </p>
-                <p style="color: var(--text-primary); font-weight: 600; margin-bottom: 1.5rem;">
-                    This will create a backup file with all attendance data.
-                </p>
-                <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
-                    <p style="color: var(--warning); font-size: 0.9375rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span>⚠️</span>
-                        <span><strong id="active-employees-exit">0</strong> employee(s) are still checked in</span>
-                    </p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancel-exit-btn">Cancel</button>
-                <button class="btn btn-danger" id="confirm-exit-btn">
-                    <span>✓</span>
-                    <span>Close & Backup</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Day Detail Modal -->
     <div class="modal" id="day-detail-modal">
         <div class="modal-content" style="max-width: 700px;">
@@ -1340,6 +1264,59 @@
         </div>
     </div>
 
+    <!-- Month Detail Modal -->
+    <div class="modal" id="month-detail-modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <div class="modal-icon">📊</div>
+                <h3 id="month-detail-title">Month Details</h3>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <label class="input-label">Filter by Employee (Optional)</label>
+                    <select id="month-detail-employee" style="width: 100%; padding: 0.75rem 1rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); font-size: 1rem;">
+                        <option value="">All Employees</option>
+                    </select>
+                </div>
+                <div id="month-detail-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="close-month-detail-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PIN Modal -->
+    <div class="modal" id="pin-modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <div class="modal-icon">🔐</div>
+                <h3 id="pin-modal-title">Enter PIN</h3>
+            </div>
+            <div class="modal-body">
+                <p id="pin-modal-message" style="color: var(--text-secondary); margin-bottom: 1.5rem; text-align: center;">
+                    Enter your 6-digit PIN to unlock your data
+                </p>
+                <div style="display: flex; gap: 0.75rem; justify-content: center; margin-bottom: 1.5rem;">
+                    <input type="password" maxlength="1" class="pin-input" id="pin-1" style="width: 50px; height: 60px; text-align: center; font-size: 2rem; padding: 0; background: var(--bg-main); border: 2px solid var(--border); border-radius: 12px; color: var(--text-primary); font-weight: 700;">
+                    <input type="password" maxlength="1" class="pin-input" id="pin-2" style="width: 50px; height: 60px; text-align: center; font-size: 2rem; padding: 0; background: var(--bg-main); border: 2px solid var(--border); border-radius: 12px; color: var(--text-primary); font-weight: 700;">
+                    <input type="password" maxlength="1" class="pin-input" id="pin-3" style="width: 50px; height: 60px; text-align: center; font-size: 2rem; padding: 0; background: var(--bg-main); border: 2px solid var(--border); border-radius: 12px; color: var(--text-primary); font-weight: 700;">
+                    <input type="password" maxlength="1" class="pin-input" id="pin-4" style="width: 50px; height: 60px; text-align: center; font-size: 2rem; padding: 0; background: var(--bg-main); border: 2px solid var(--border); border-radius: 12px; color: var(--text-primary); font-weight: 700;">
+                    <input type="password" maxlength="1" class="pin-input" id="pin-5" style="width: 50px; height: 60px; text-align: center; font-size: 2rem; padding: 0; background: var(--bg-main); border: 2px solid var(--border); border-radius: 12px; color: var(--text-primary); font-weight: 700;">
+                    <input type="password" maxlength="1" class="pin-input" id="pin-6" style="width: 50px; height: 60px; text-align: center; font-size: 2rem; padding: 0; background: var(--bg-main); border: 2px solid var(--border); border-radius: 12px; color: var(--text-primary); font-weight: 700;">
+                </div>
+                <div id="pin-error" style="color: var(--danger); text-align: center; margin-bottom: 1rem; display: none; font-weight: 600;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-pin-btn">Cancel</button>
+                <button class="btn btn-primary" id="confirm-pin-btn">
+                    <span>✓</span>
+                    <span id="pin-btn-text">Unlock</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Suppress console in production
         if (window.location.protocol === 'file:') {
@@ -1347,12 +1324,17 @@
         }
 
         const STORAGE_KEY = 'PHARMACY_ATTENDANCE_DATA_V2';
+        const PIN_STORAGE_KEY = 'PHARMACY_EMPLOYEE_PINS';
         let appData = { profiles: [], sessions: [] };
+        let employeePins = {}; // { employeeName: { pin: "123456", unlocked: false } }
         let currentView = 'daily';
         let updateInterval = null;
         let selectedCheckoutEmployee = null;
         let currentCalendarDate = new Date();
         let selectedDayData = null;
+        let currentUnlockingEmployee = null;
+        let calendarViewType = 'days'; // 'days' or 'months'
+        let currentChartInstance = null;
 
         // ===== INITIALIZATION =====
         function init() {
@@ -1375,8 +1357,34 @@
                     if (!appData.profiles) appData.profiles = [];
                     if (!appData.sessions) appData.sessions = [];
                 }
+                
+                // Load PINs
+                const pinsStored = localStorage.getItem(PIN_STORAGE_KEY);
+                if (pinsStored) {
+                    employeePins = JSON.parse(pinsStored);
+                } else {
+                    employeePins = {};
+                }
+                
+                // Initialize PINs for existing profiles
+                appData.profiles.forEach(profile => {
+                    if (!employeePins[profile.name]) {
+                        employeePins[profile.name] = { pin: null, unlocked: false };
+                    }
+                });
+                savePins();
             } catch (error) {
                 appData = { profiles: [], sessions: [] };
+                employeePins = {};
+            }
+        }
+
+        function savePins() {
+            try {
+                localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify(employeePins));
+                return true;
+            } catch (error) {
+                return false;
             }
         }
 
@@ -1401,19 +1409,40 @@
             document.getElementById('analytics-btn').addEventListener('click', () => switchView('analytics'));
             document.getElementById('compare-btn').addEventListener('click', () => switchView('compare'));
             document.getElementById('manage-btn').addEventListener('click', () => switchView('manage'));
-            document.getElementById('manual-btn').addEventListener('click', showManualRecordModal);
             document.getElementById('profile-search').addEventListener('input', filterProfiles);
             document.getElementById('create-profile-btn').addEventListener('click', createProfile);
             document.getElementById('cancel-checkin-btn').addEventListener('click', () => hideModal('checkin-modal'));
             document.getElementById('cancel-checkout-selection-btn').addEventListener('click', () => hideModal('checkout-selection-modal'));
             document.getElementById('cancel-checkout-confirm-btn').addEventListener('click', () => hideModal('checkout-confirm-modal'));
             document.getElementById('confirm-checkout-btn').addEventListener('click', confirmCheckout);
-            document.getElementById('cancel-manual-btn').addEventListener('click', () => hideModal('manual-record-modal'));
-            document.getElementById('save-manual-btn').addEventListener('click', saveManualRecord);
             document.getElementById('cancel-exit-btn').addEventListener('click', () => hideModal('exit-modal'));
             document.getElementById('confirm-exit-btn').addEventListener('click', confirmExit);
             document.getElementById('close-day-detail-btn').addEventListener('click', () => hideModal('day-detail-modal'));
             document.getElementById('day-detail-employee').addEventListener('change', updateDayDetail);
+            document.getElementById('close-month-detail-btn').addEventListener('click', () => hideModal('month-detail-modal'));
+            document.getElementById('month-detail-employee').addEventListener('change', updateMonthDetail);
+            document.getElementById('cancel-pin-btn').addEventListener('click', () => hideModal('pin-modal'));
+            document.getElementById('confirm-pin-btn').addEventListener('click', handlePinSubmit);
+            
+            // Setup PIN input handlers
+            setupPinInputs();
+        }
+
+        function setupPinInputs() {
+            const inputs = document.querySelectorAll('.pin-input');
+            inputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1 && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                });
+                
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        inputs[index - 1].focus();
+                    }
+                });
+            });
         }
 
         // ===== DATE & TIME =====
@@ -1656,6 +1685,12 @@
                 appData.profiles.push({ name, activeSessionId: null });
                 saveData();
                 selectProfile(name);
+                
+                // Initialize PIN for new employee
+                if (!employeePins[name]) {
+                    employeePins[name] = { pin: null, unlocked: false };
+                    savePins();
+                }
             } catch (error) {
                 showStatus('Error creating profile', 'error');
             }
@@ -1848,11 +1883,13 @@
                         ? Math.floor((checkout - checkin) / 1000)
                         : Math.floor((Date.now() - checkin) / 1000);
                     
+                    const isUnlocked = isEmployeeUnlocked(s.name);
+                    
                     html += '<tr>';
-                    html += `<td><strong>${s.name}</strong></td>`;
-                    html += `<td>${checkin.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</td>`;
-                    html += `<td>${checkout ? checkout.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—'}</td>`;
-                    html += `<td><strong>${formatHoursMinutes(duration)}</strong></td>`;
+                    html += `<td><strong>${isUnlocked ? s.name : maskEmployeeName(s.name)}</strong></td>`;
+                    html += `<td>${isUnlocked ? checkin.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : maskEmployeeData('time')}</td>`;
+                    html += `<td>${isUnlocked ? (checkout ? checkout.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—') : maskEmployeeData('time')}</td>`;
+                    html += `<td><strong>${isUnlocked ? formatHoursMinutes(duration) : maskEmployeeData('duration')}</strong></td>`;
                     html += `<td><span class="status-badge-table status-${checkout ? 'completed' : 'active'}">${checkout ? 'Completed' : 'Active'}</span></td>`;
                     html += '</tr>';
                 });
@@ -1926,12 +1963,14 @@
                 
                 Object.entries(stats).sort((a, b) => b[1].totalSeconds - a[1].totalSeconds).forEach(([name, s]) => {
                     const avgPerDay = s.days.size > 0 ? s.totalSeconds / s.days.size : 0;
+                    const isUnlocked = isEmployeeUnlocked(name);
+                    
                     html += '<tr>';
-                    html += `<td><strong>${name}</strong></td>`;
-                    html += `<td>${s.sessionCount}</td>`;
-                    html += `<td>${s.days.size}</td>`;
-                    html += `<td><strong>${formatHoursMinutes(s.totalSeconds)}</strong></td>`;
-                    html += `<td>${formatHoursMinutes(avgPerDay)}</td>`;
+                    html += `<td><strong>${isUnlocked ? name : maskEmployeeName(name)}</strong></td>`;
+                    html += `<td>${isUnlocked ? s.sessionCount : maskEmployeeData(s.sessionCount)}</td>`;
+                    html += `<td>${isUnlocked ? s.days.size : maskEmployeeData(s.days.size)}</td>`;
+                    html += `<td><strong>${isUnlocked ? formatHoursMinutes(s.totalSeconds) : maskEmployeeData('hours')}</strong></td>`;
+                    html += `<td>${isUnlocked ? formatHoursMinutes(avgPerDay) : maskEmployeeData('hours')}</td>`;
                     html += '</tr>';
                 });
                 
@@ -1942,7 +1981,118 @@
             }
         }
 
-        // ===== MANAGE EMPLOYEES =====
+        // ===== DATA MASKING FUNCTIONS =====
+        function maskEmployeeName(name) {
+            if (isEmployeeUnlocked(name)) {
+                return name;
+            }
+            return '***';
+        }
+
+        function maskEmployeeData(data) {
+            if (typeof data === 'string') {
+                return '***';
+            }
+            if (typeof data === 'number') {
+                return '***';
+            }
+            return data;
+        }
+
+        function isEmployeeUnlocked(name) {
+            return employeePins[name] && employeePins[name].unlocked === true;
+        }
+
+        // ===== PIN MANAGEMENT =====
+        function showPinModal(employeeName) {
+            try {
+                currentUnlockingEmployee = employeeName;
+                const hasPin = employeePins[employeeName] && employeePins[employeeName].pin;
+                
+                if (hasPin) {
+                    document.getElementById('pin-modal-title').textContent = 'Unlock Data';
+                    document.getElementById('pin-modal-message').textContent = `Enter your 6-digit PIN to unlock ${employeeName}'s data`;
+                    document.getElementById('pin-btn-text').textContent = 'Unlock';
+                } else {
+                    document.getElementById('pin-modal-title').textContent = 'Set PIN';
+                    document.getElementById('pin-modal-message').textContent = `Create a 6-digit PIN for ${employeeName}`;
+                    document.getElementById('pin-btn-text').textContent = 'Set PIN';
+                }
+                
+                // Clear inputs
+                document.querySelectorAll('.pin-input').forEach(input => {
+                    input.value = '';
+                    input.style.borderColor = 'var(--border)';
+                });
+                document.getElementById('pin-error').style.display = 'none';
+                
+                showModal('pin-modal');
+                document.getElementById('pin-1').focus();
+            } catch (error) {
+                showStatus('Error opening PIN modal', 'error');
+            }
+        }
+
+        function handlePinSubmit() {
+            try {
+                const pin = Array.from({length: 6}, (_, i) => 
+                    document.getElementById(`pin-${i + 1}`).value
+                ).join('');
+                
+                if (pin.length !== 6 || !/^\d{6}$/.test(pin)) {
+                    showPinError('PIN must be exactly 6 digits');
+                    return;
+                }
+                
+                const employeeName = currentUnlockingEmployee;
+                const hasPin = employeePins[employeeName] && employeePins[employeeName].pin;
+                
+                if (hasPin) {
+                    // Verify PIN
+                    if (employeePins[employeeName].pin === pin) {
+                        employeePins[employeeName].unlocked = true;
+                        savePins();
+                        hideModal('pin-modal');
+                        showStatus(`${employeeName}'s data unlocked`, 'success');
+                        updateUI();
+                    } else {
+                        showPinError('Incorrect PIN');
+                        // Shake animation
+                        document.querySelectorAll('.pin-input').forEach(input => {
+                            input.style.borderColor = 'var(--danger)';
+                        });
+                    }
+                } else {
+                    // Set new PIN
+                    employeePins[employeeName] = { pin: pin, unlocked: true };
+                    savePins();
+                    hideModal('pin-modal');
+                    showStatus(`PIN set successfully for ${employeeName}`, 'success');
+                    updateUI();
+                }
+                
+                currentUnlockingEmployee = null;
+            } catch (error) {
+                showStatus('Error processing PIN', 'error');
+            }
+        }
+
+        function showPinError(message) {
+            const errorDiv = document.getElementById('pin-error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function lockEmployee(employeeName) {
+            if (employeePins[employeeName]) {
+                employeePins[employeeName].unlocked = false;
+                savePins();
+                showStatus(`${employeeName}'s data locked`, 'success');
+                updateUI();
+            }
+        }
+
+        // ===== MANAGE EMPLOYEES (Updated with Privacy) =====
         function renderManageEmployees(container) {
             try {
                 if (appData.profiles.length === 0) {
@@ -1958,16 +2108,25 @@
 
                 let html = '<h3 class="content-title">Manage Employees</h3>';
                 html += '<div class="table-container"><table>';
-                html += '<thead><tr><th>Employee Name</th><th>Total Sessions</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+                html += '<thead><tr><th>Employee Name</th><th>Total Sessions</th><th>Status</th><th>Privacy</th><th>Actions</th></tr></thead><tbody>';
                 
                 appData.profiles.forEach(profile => {
                     const sessionCount = appData.sessions.filter(s => s.name === profile.name).length;
                     const isActive = profile.activeSessionId !== null;
+                    const isUnlocked = isEmployeeUnlocked(profile.name);
+                    const hasPin = employeePins[profile.name] && employeePins[profile.name].pin;
                     
                     html += '<tr>';
                     html += `<td><strong>${profile.name}</strong></td>`;
-                    html += `<td>${sessionCount}</td>`;
+                    html += `<td>${isUnlocked ? sessionCount : '***'}</td>`;
                     html += `<td><span class="status-badge-table status-${isActive ? 'active' : 'completed'}">${isActive ? 'Active' : 'Inactive'}</span></td>`;
+                    html += '<td>';
+                    if (isUnlocked) {
+                        html += `<button class="btn btn-secondary" onclick="lockEmployee('${profile.name}')" style="padding: 0.5rem 1rem; font-size: 0.875rem;"><span>🔒</span> Lock</button>`;
+                    } else {
+                        html += `<button class="btn btn-primary" onclick="showPinModal('${profile.name}')" style="padding: 0.5rem 1rem; font-size: 0.875rem;"><span>👁️</span> ${hasPin ? 'Unlock' : 'Set PIN'}</button>`;
+                    }
+                    html += '</td>';
                     html += `<td><button class="btn btn-danger" onclick="deleteEmployee('${profile.name}')" style="padding: 0.5rem 1rem; font-size: 0.875rem;"><span>🗑️</span> Delete</button></td>`;
                     html += '</tr>';
                 });
@@ -2000,91 +2159,8 @@
             }
         }
 
-        // ===== MANUAL RECORD =====
-        function showManualRecordModal() {
-            try {
-                if (appData.profiles.length === 0) {
-                    showStatus('Please add employees first', 'warning');
-                    return;
-                }
-                
-                // Populate employee dropdown
-                const select = document.getElementById('manual-employee');
-                select.innerHTML = '<option value="">Choose employee...</option>';
-                appData.profiles.forEach(p => {
-                    select.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                });
-                
-                // Set default date to today
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('manual-date').value = today;
-                document.getElementById('manual-checkin').value = '';
-                document.getElementById('manual-checkout').value = '';
-                document.getElementById('manual-note').value = '';
-                
-                showModal('manual-record-modal');
-            } catch (error) {
-                showStatus('Error opening manual record', 'error');
-            }
-        }
-
-        function saveManualRecord() {
-            try {
-                const employee = document.getElementById('manual-employee').value;
-                const date = document.getElementById('manual-date').value;
-                const checkinTime = document.getElementById('manual-checkin').value;
-                const checkoutTime = document.getElementById('manual-checkout').value;
-                const note = document.getElementById('manual-note').value.trim();
-                
-                if (!employee) {
-                    showStatus('Please select an employee', 'warning');
-                    return;
-                }
-                
-                if (!date) {
-                    showStatus('Please select a date', 'warning');
-                    return;
-                }
-                
-                if (!checkinTime) {
-                    showStatus('Please enter check-in time', 'warning');
-                    return;
-                }
-                
-                if (!checkoutTime) {
-                    showStatus('Please enter check-out time', 'warning');
-                    return;
-                }
-                
-                // Create timestamps
-                const checkinTimestamp = new Date(`${date}T${checkinTime}`).getTime();
-                const checkoutTimestamp = new Date(`${date}T${checkoutTime}`).getTime();
-                
-                if (checkoutTimestamp <= checkinTimestamp) {
-                    showStatus('Check-out time must be after check-in time', 'error');
-                    return;
-                }
-                
-                // Create session
-                const session = {
-                    sessionId: generateId(),
-                    name: employee,
-                    checkInTime: checkinTimestamp,
-                    checkOutTime: checkoutTimestamp,
-                    reason: note || 'Manual entry'
-                };
-                
-                appData.sessions.push(session);
-                
-                if (saveData()) {
-                    hideModal('manual-record-modal');
-                    showStatus('Manual record added successfully');
-                    updateUI();
-                }
-            } catch (error) {
-                showStatus('Failed to save manual record', 'error');
-            }
-        }
+        // ===== MANUAL RECORD (REMOVED) =====
+        // Manual record feature has been removed as requested
 
         // ===== EXIT & BACKUP =====
         function showExitModal() {
@@ -2198,16 +2274,23 @@
                 // Filter controls
                 html += '<div class="filter-controls">';
                 html += '<div class="filter-group">';
+                html += '<label>View Type</label>';
+                html += '<select id="history-calendar-type" onchange="switchCalendarView()">';
+                html += '<option value="days">Days View</option>';
+                html += '<option value="months">Months View</option>';
+                html += '</select>';
+                html += '</div>';
+                html += '<div class="filter-group">';
                 html += '<label>Employee</label>';
                 html += '<select id="history-employee-filter" onchange="renderCalendar()">';
                 html += '<option value="">All Employees</option>';
                 appData.profiles.forEach(p => {
-                    html += `<option value="${p.name}">${p.name}</option>`;
+                    html += `<option value="${p.name}">${isEmployeeUnlocked(p.name) ? p.name : '***'}</option>`;
                 });
                 html += '</select>';
                 html += '</div>';
                 html += '<div class="filter-group">';
-                html += '<label>View Type</label>';
+                html += '<label>List View</label>';
                 html += '<select id="history-view-type" onchange="updateHistoryView()">';
                 html += '<option value="calendar">Calendar</option>';
                 html += '<option value="list">List View</option>';
@@ -2233,7 +2316,218 @@
             }
         }
 
+        function switchCalendarView() {
+            const viewType = document.getElementById('history-calendar-type').value;
+            calendarViewType = viewType;
+            renderCalendar();
+        }
+
         function renderCalendar() {
+            try {
+                if (calendarViewType === 'months') {
+                    renderMonthsCalendar();
+                } else {
+                    renderDaysCalendar();
+                }
+            } catch (error) {
+                // Silent fail
+            }
+        }
+
+        function renderMonthsCalendar() {
+            try {
+                const employeeFilter = document.getElementById('history-employee-filter')?.value || '';
+                const container = document.getElementById('history-content-area');
+                
+                const year = currentCalendarDate.getFullYear();
+                
+                let html = '<div class="calendar-container">';
+                html += '<div class="calendar-header">';
+                html += '<div class="calendar-nav">';
+                html += '<button onclick="changeYear(-1)">‹ Prev Year</button>';
+                html += `<div class="calendar-title">${year}</div>`;
+                html += '<button onclick="changeYear(1)">Next Year ›</button>';
+                html += '</div>';
+                html += '<button onclick="currentCalendarDate = new Date(); renderCalendar()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">This Year</button>';
+                html += '</div>';
+                
+                // Months grid
+                html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 2rem;">';
+                
+                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                   'July', 'August', 'September', 'October', 'November', 'December'];
+                
+                const currentMonth = new Date().getMonth();
+                const currentYear = new Date().getFullYear();
+                
+                for (let month = 0; month < 12; month++) {
+                    const monthStart = new Date(year, month, 1);
+                    const monthEnd = new Date(year, month + 1, 0);
+                    
+                    let sessions = appData.sessions.filter(s => {
+                        const sessionDate = new Date(s.checkInTime);
+                        return sessionDate >= monthStart && sessionDate <= monthEnd;
+                    });
+                    
+                    if (employeeFilter) {
+                        sessions = sessions.filter(s => s.name === employeeFilter);
+                    }
+                    
+                    const isCurrentMonth = month === currentMonth && year === currentYear;
+                    const hasData = sessions.length > 0;
+                    
+                    let classes = 'calendar-day';
+                    if (isCurrentMonth) classes += ' today';
+                    if (hasData) classes += ' has-data';
+                    
+                    html += `<div class="${classes}" onclick="showMonthDetail(${year}, ${month})" style="padding: 2rem; aspect-ratio: auto;">`;
+                    html += `<div style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">${monthNames[month]}</div>`;
+                    if (hasData) {
+                        const unlockedSessions = sessions.filter(s => isEmployeeUnlocked(s.name));
+                        html += `<div style="font-size: 0.9375rem; color: var(--text-muted);">${unlockedSessions.length > 0 ? unlockedSessions.length : '***'} session${sessions.length > 1 ? 's' : ''}</div>`;
+                    } else {
+                        html += `<div style="font-size: 0.9375rem; color: var(--text-muted);">No sessions</div>`;
+                    }
+                    html += '</div>';
+                }
+                
+                html += '</div></div>';
+                container.innerHTML = html;
+            } catch (error) {
+                // Silent fail
+            }
+        }
+
+        function changeYear(delta) {
+            currentCalendarDate.setFullYear(currentCalendarDate.getFullYear() + delta);
+            renderCalendar();
+        }
+
+        function showMonthDetail(year, month) {
+            try {
+                selectedDayData = { year, month };
+                const monthName = new Date(year, month).toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    year: 'numeric'  
+                });
+                
+                document.getElementById('month-detail-title').textContent = monthName;
+                
+                // Populate employee filter
+                const monthStart = new Date(year, month, 1);
+                const monthEnd = new Date(year, month + 1, 0);
+                const employeesInMonth = new Set(
+                    appData.sessions
+                        .filter(s => {
+                            const d = new Date(s.checkInTime);
+                            return d >= monthStart && d <= monthEnd;
+                        })
+                        .map(s => s.name)
+                );
+                
+                const select = document.getElementById('month-detail-employee');
+                select.innerHTML = '<option value="">All Employees</option>';
+                employeesInMonth.forEach(name => {
+                    select.innerHTML += `<option value="${name}">${isEmployeeUnlocked(name) ? name : '***'}</option>`;
+                });
+                
+                updateMonthDetail();
+                showModal('month-detail-modal');
+            } catch (error) {
+                showStatus('Error loading month details', 'error');
+            }
+        }
+
+        function updateMonthDetail() {
+            try {
+                const { year, month } = selectedDayData;
+                const employeeFilter = document.getElementById('month-detail-employee').value;
+                
+                const monthStart = new Date(year, month, 1);
+                const monthEnd = new Date(year, month + 1, 0);
+                
+                let sessions = appData.sessions.filter(s => {
+                    const sessionDate = new Date(s.checkInTime);
+                    return sessionDate >= monthStart && sessionDate <= monthEnd;
+                });
+                
+                if (employeeFilter) {
+                    sessions = sessions.filter(s => s.name === employeeFilter);
+                }
+                
+                const container = document.getElementById('month-detail-content');
+                
+                if (sessions.length === 0) {
+                    container.innerHTML = '<div class="empty-state" style="padding: 2rem;"><p>No sessions found</p></div>';
+                    return;
+                }
+                
+                // Calculate summary
+                let totalSeconds = 0;
+                const employeeStats = {};
+                const daysWorked = new Set();
+                
+                sessions.forEach(s => {
+                    if (isEmployeeUnlocked(s.name)) {
+                        const end = s.checkOutTime || Date.now();
+                        const duration = Math.floor((end - s.checkInTime) / 1000);
+                        totalSeconds += duration;
+                        daysWorked.add(getDateString(s.checkInTime));
+                        
+                        if (!employeeStats[s.name]) {
+                            employeeStats[s.name] = { sessions: 0, seconds: 0 };
+                        }
+                        employeeStats[s.name].sessions++;
+                        employeeStats[s.name].seconds += duration;
+                    }
+                });
+                
+                let html = '<div class="summary-grid" style="margin-bottom: 2rem;">';
+                html += `
+                    <div class="summary-card">
+                        <h4>Total Hours</h4>
+                        <div class="value">${totalSeconds > 0 ? formatHoursMinutes(totalSeconds) : '***'}</div>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Total Sessions</h4>
+                        <div class="value">${Object.keys(employeeStats).length > 0 ? sessions.filter(s => isEmployeeUnlocked(s.name)).length : '***'}</div>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Days Worked</h4>
+                        <div class="value">${daysWorked.size > 0 ? daysWorked.size : '***'}</div>
+                    </div>
+                `;
+                html += '</div>';
+                
+                html += '<div class="table-container"><table>';
+                html += '<thead><tr><th>Employee</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration</th></tr></thead><tbody>';
+                
+                sessions.sort((a, b) => b.checkInTime - a.checkInTime).forEach(s => {
+                    const checkin = new Date(s.checkInTime);
+                    const checkout = s.checkOutTime ? new Date(s.checkOutTime) : null;
+                    const duration = checkout 
+                        ? Math.floor((checkout - checkin) / 1000)
+                        : Math.floor((Date.now() - checkin) / 1000);
+                    
+                    const isUnlocked = isEmployeeUnlocked(s.name);
+                    
+                    html += '<tr>';
+                    html += `<td><strong>${isUnlocked ? s.name : maskEmployeeName(s.name)}</strong></td>`;
+                    html += `<td>${isUnlocked ? checkin.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '***'}</td>`;
+                    html += `<td>${isUnlocked ? checkin.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '***'}</td>`;
+                    html += `<td>${isUnlocked ? (checkout ? checkout.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'Active') : '***'}</td>`;
+                    html += `<td><strong>${isUnlocked ? formatHoursMinutes(duration) : '***'}</strong></td>`;
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+            } catch (error) {
+                // Silent fail
+            }
+        }
+
+        function renderDaysCalendar() {
             try {
                 const employeeFilter = document.getElementById('history-employee-filter')?.value || '';
                 const container = document.getElementById('history-content-area');
@@ -2368,11 +2662,13 @@
                         ? Math.floor((checkout - checkin) / 1000)
                         : Math.floor((Date.now() - checkin) / 1000);
                     
+                    const isUnlocked = isEmployeeUnlocked(s.name);
+                    
                     html += '<tr>';
-                    html += `<td><strong>${s.name}</strong></td>`;
-                    html += `<td>${checkin.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</td>`;
-                    html += `<td>${checkout ? checkout.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'Active'}</td>`;
-                    html += `<td><strong>${formatHoursMinutes(duration)}</strong></td>`;
+                    html += `<td><strong>${isUnlocked ? s.name : maskEmployeeName(s.name)}</strong></td>`;
+                    html += `<td>${isUnlocked ? checkin.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : maskEmployeeData('time')}</td>`;
+                    html += `<td>${isUnlocked ? (checkout ? checkout.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'Active') : maskEmployeeData('time')}</td>`;
+                    html += `<td><strong>${isUnlocked ? formatHoursMinutes(duration) : maskEmployeeData('duration')}</strong></td>`;
                     html += '</tr>';
                 });
                 
@@ -2427,11 +2723,13 @@
                             ? Math.floor((checkout - checkin) / 1000)
                             : Math.floor((Date.now() - checkin) / 1000);
                         
+                        const isUnlocked = isEmployeeUnlocked(s.name);
+                        
                         html += '<tr>';
-                        html += `<td><strong>${s.name}</strong></td>`;
-                        html += `<td>${checkin.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</td>`;
-                        html += `<td>${checkout ? checkout.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'Active'}</td>`;
-                        html += `<td><strong>${formatHoursMinutes(duration)}</strong></td>`;
+                        html += `<td><strong>${isUnlocked ? s.name : maskEmployeeName(s.name)}</strong></td>`;
+                        html += `<td>${isUnlocked ? checkin.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : maskEmployeeData('time')}</td>`;
+                        html += `<td>${isUnlocked ? (checkout ? checkout.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : 'Active') : maskEmployeeData('time')}</td>`;
+                        html += `<td><strong>${isUnlocked ? formatHoursMinutes(duration) : maskEmployeeData('duration')}</strong></td>`;
                         html += '</tr>';
                     });
                     
@@ -2456,7 +2754,7 @@
                 html += '<select id="analytics-employee" onchange="updateAnalytics()">';
                 html += '<option value="">Select an employee...</option>';
                 appData.profiles.forEach(p => {
-                    html += `<option value="${p.name}">${p.name}</option>`;
+                    html += `<option value="${p.name}">${isEmployeeUnlocked(p.name) ? p.name : '***'}</option>`;
                 });
                 html += '</select>';
                 html += '</div>';
@@ -2466,6 +2764,14 @@
                 html += '<option value="week">Last 7 Days</option>';
                 html += '<option value="month" selected>Last 30 Days</option>';
                 html += '<option value="year">Last 12 Months</option>';
+                html += '</select>';
+                html += '</div>';
+                html += '<div class="filter-group">';
+                html += '<label>Chart Type</label>';
+                html += '<select id="analytics-chart-type" onchange="updateAnalytics()">';
+                html += '<option value="line">Line Chart</option>';
+                html += '<option value="bar">Bar Chart</option>';
+                html += '<option value="pie">Pie Chart</option>';
                 html += '</select>';
                 html += '</div>';
                 html += '</div>';
@@ -2480,10 +2786,16 @@
         function updateAnalytics() {
             const employee = document.getElementById('analytics-employee').value;
             const period = document.getElementById('analytics-period').value;
+            const chartType = document.getElementById('analytics-chart-type').value;
             const container = document.getElementById('analytics-content');
             
             if (!employee) {
                 container.innerHTML = '<div class="empty-state" style="padding: 3rem;"><div class="empty-icon">📊</div><p>Select an employee to view analytics</p></div>';
+                return;
+            }
+            
+            if (!isEmployeeUnlocked(employee)) {
+                container.innerHTML = '<div class="empty-state" style="padding: 3rem;"><div class="empty-icon">🔒</div><p>This employee\'s data is locked. Enter PIN to view.</p></div>';
                 return;
             }
             
@@ -2515,7 +2827,7 @@
             const avgPerDay = daysWorked.size > 0 ? totalSeconds / daysWorked.size : 0;
             const avgPerSession = totalSessions > 0 ? totalSeconds / totalSessions : 0;
             
-            // Render charts
+            // Render summary and charts
             let html = '<div class="summary-grid">';
             html += `
                 <div class="summary-card">
@@ -2541,16 +2853,31 @@
             `;
             html += '</div>';
             
-            // Simple bar chart visualization
+            // Chart container
             html += '<div class="chart-container">';
-            html += '<h4 style="margin-bottom: 1.5rem; color: var(--text-primary);">Daily Hours Chart</h4>';
-            html += renderSimpleBarChart(periodSessions, period);
+            html += `<h4 style="margin-bottom: 1.5rem; color: var(--text-primary);">${chartType.charAt(0).toUpperCase() + chartType.slice(1)} Chart - Daily Hours</h4>`;
+            html += '<canvas id="analytics-chart" style="max-height: 400px;"></canvas>';
             html += '</div>';
             
             container.innerHTML = html;
+            
+            // Render chart
+            setTimeout(() => renderChart(periodSessions, chartType, period), 100);
         }
 
-        function renderSimpleBarChart(sessions, period) {
+        function renderChart(sessions, chartType, period) {
+            const canvas = document.getElementById('analytics-chart');
+            if (!canvas) return;
+            
+            // Destroy previous chart
+            if (currentChartInstance) {
+                currentChartInstance.destroy();
+                currentChartInstance = null;
+            }
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Prepare data
             const dailyHours = {};
             sessions.forEach(s => {
                 const dateStr = getDateString(s.checkInTime);
@@ -2559,24 +2886,150 @@
                 dailyHours[dateStr] = (dailyHours[dateStr] || 0) + hours;
             });
             
-            const maxHours = Math.max(...Object.values(dailyHours), 1);
-            
-            let html = '<div style="display: flex; align-items: flex-end; gap: 0.5rem; height: 300px;">';
-            
-            Object.keys(dailyHours).sort().slice(-14).forEach(dateStr => {
-                const hours = dailyHours[dateStr];
-                const percentage = (hours / maxHours) * 100;
-                const date = new Date(dateStr);
-                const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                
-                html += '<div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">';
-                html += `<div style="width: 100%; background: linear-gradient(to top, var(--primary), var(--secondary)); border-radius: 4px 4px 0 0; height: ${percentage}%; min-height: 2px;"></div>`;
-                html += `<div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted); transform: rotate(-45deg); white-space: nowrap;">${label}</div>`;
-                html += '</div>';
+            const sortedDates = Object.keys(dailyHours).sort();
+            const labels = sortedDates.map(d => {
+                const date = new Date(d);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             });
+            const data = sortedDates.map(d => dailyHours[d].toFixed(2));
             
-            html += '</div>';
-            return html;
+            if (chartType === 'pie') {
+                // Pie chart: Show distribution of hours across days
+                const colors = generateColors(labels.length);
+                
+                currentChartInstance = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: colors,
+                            borderWidth: 2,
+                            borderColor: '#1e293b'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: '#f1f5f9',
+                                    font: { size: 12 }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.label + ': ' + context.parsed + ' hours';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else if (chartType === 'bar') {
+                currentChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Hours Worked',
+                            data: data,
+                            backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                            borderColor: 'rgba(99, 102, 241, 1)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: '#334155' }
+                            },
+                            x: {
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: '#334155' }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: { color: '#f1f5f9' }
+                            }
+                        }
+                    }
+                });
+            } else {
+                // Line chart
+                currentChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Hours Worked',
+                            data: data,
+                            fill: true,
+                            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                            borderColor: 'rgba(99, 102, 241, 1)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            pointBackgroundColor: 'rgba(139, 92, 246, 1)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: '#334155' }
+                            },
+                            x: {
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: '#334155' }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: { color: '#f1f5f9' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function generateColors(count) {
+            const colors = [
+                'rgba(99, 102, 241, 0.8)',
+                'rgba(139, 92, 246, 0.8)',
+                'rgba(59, 130, 246, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(245, 158, 11, 0.8)',
+                'rgba(239, 68, 68, 0.8)',
+                'rgba(236, 72, 153, 0.8)',
+                'rgba(14, 165, 233, 0.8)'
+            ];
+            
+            const result = [];
+            for (let i = 0; i < count; i++) {
+                result.push(colors[i % colors.length]);
+            }
+            return result;
+        }
+
+        function renderSimpleBarChart(sessions, period) {
+            // This function is no longer needed - replaced by Chart.js
+            return '';
         }
 
         // ===== COMPARE VIEW =====
@@ -2650,10 +3103,12 @@
             
             employeeStats.forEach((stats, index) => {
                 const isWinner = index === 0 && stats.totalSeconds > 0;
+                const isUnlocked = isEmployeeUnlocked(stats.name);
+                
                 html += `<div class="compare-card ${isWinner ? 'winner' : ''}">`;
                 html += '<div class="compare-card-header">';
-                html += `<div class="compare-card-name">${stats.name}</div>`;
-                if (isWinner) {
+                html += `<div class="compare-card-name">${isUnlocked ? stats.name : maskEmployeeName(stats.name)}</div>`;
+                if (isWinner && isUnlocked) {
                     html += '<div class="compare-badge">🏆 Top Performer</div>';
                 }
                 html += '</div>';
@@ -2661,19 +3116,19 @@
                 html += `
                     <div class="compare-stat">
                         <span class="compare-stat-label">Total Hours</span>
-                        <span class="compare-stat-value">${formatHoursMinutes(stats.totalSeconds)}</span>
+                        <span class="compare-stat-value">${isUnlocked ? formatHoursMinutes(stats.totalSeconds) : maskEmployeeData('hours')}</span>
                     </div>
                     <div class="compare-stat">
                         <span class="compare-stat-label">Sessions</span>
-                        <span class="compare-stat-value">${stats.sessions}</span>
+                        <span class="compare-stat-value">${isUnlocked ? stats.sessions : maskEmployeeData(stats.sessions)}</span>
                     </div>
                     <div class="compare-stat">
                         <span class="compare-stat-label">Days Worked</span>
-                        <span class="compare-stat-value">${stats.daysWorked}</span>
+                        <span class="compare-stat-value">${isUnlocked ? stats.daysWorked : maskEmployeeData(stats.daysWorked)}</span>
                     </div>
                     <div class="compare-stat">
                         <span class="compare-stat-label">Avg/Day</span>
-                        <span class="compare-stat-value">${formatHoursMinutes(stats.avgPerDay)}</span>
+                        <span class="compare-stat-value">${isUnlocked ? formatHoursMinutes(stats.avgPerDay) : maskEmployeeData('hours')}</span>
                     </div>
                 `;
                 html += '</div>';
